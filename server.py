@@ -1,24 +1,37 @@
 import socket
 import string
 import random
+import pickle
+from unidecode import unidecode
 
 #Funcion para quitar espacios y volver la palabra a minusculas
 def cleanWord(word):
-    return word.strip().lower()
+    word = word.strip().upper()
+    clnwrd = unidecode(word)
+    clnwrd.encode("ascii")
+    return clnwrd
 #Revisa los resultados y asigna un puntaje
 def totalScore(word):
     score = 0
-    if word[0] in open('Data/mujeres').read():
+    if cleanWord(word[0]) in open('Data/mujeres').read().upper():
         score += 10
-    if word[1] in open('Data/hombres').read():
+    if cleanWord(word[1]) in open('Data/hombres').read().upper():
         score += 10
-    if word[2] in open('Data/apellidos').read():
+    if cleanWord(word[2]) in open('Data/apellidos').read().upper():
         score += 10
-    if word[3] in open('Data/paises').read():
+    if cleanWord(word[3]) in open('Data/paises').read().upper():
         score += 10
-    if word[4] in open('Data/colores').read():
+    if cleanWord(word[4]) in open('Data/colores').read().upper():
         score += 10
     return score
+#Determina al ganador
+def winner(p1, p2):
+    if p1 > p2:
+        return 1
+    elif p1 < p2:
+        return 2
+    elif p1 == p2:
+        return 0
 #Elige una letra al azar para comenzar el juego
 lttr = random.choice(string.ascii_uppercase)
 tot1 = ['','','','','']
@@ -39,77 +52,25 @@ sc1.send(lttr)
 sc2.send(lttr)
 
 while True:
-    #Nombre de mujer#
-    sc1.send("Ingrese un nombre de mujer que comience con " + lttr + '\n')
-    sc2.send("Ingrese un nombre de mujer que comience con " + lttr + '\n')
-
-    rec1 = cleanWord(sc1.recv(1024))
-    print(rec1)
-
-    rec2 = cleanWord(sc2.recv(1024))
-    print(rec2)
-
-    tot1[0] = rec1
-    tot2[0] = rec2
-    
-    #Nombre de hombre#
-    sc1.send("Ingrese un nombre de hombre que comience con " + lttr + '\n')
-    sc2.send("Ingrese un nombre de hombre que comience con " + lttr + '\n')
-
-    rec1 = cleanWord(sc1.recv(1024))
-    print(rec1)
-
-    rec2 = cleanWord(sc2.recv(1024))
-    print(rec2)
-
-    tot1[1] = rec1
-    tot2[1] = rec2
-
-    #Apellido#
-    sc1.send("Ingrese un apellido que comience con " + lttr + '\n')
-    sc2.send("Ingrese un apellido que comience con " + lttr + '\n')
-
-    rec1 = cleanWord(sc1.recv(1024))
-    print(rec1)
-
-    rec2 = cleanWord(sc2.recv(1024))
-    print(rec2)
-
-    tot1[2] = rec1
-    tot2[2] = rec2
-
-    #Pais#
-    sc1.send("Ingrese un pais que comience con " + lttr + '\n')
-    sc2.send("Ingrese un pais que comience con " + lttr + '\n')
-
-    rec1 = cleanWord(sc1.recv(1024))
-    print(rec1)
-
-    rec2 = cleanWord(sc2.recv(1024))
-    print(rec2)
-
-    tot1[3] = rec1
-    tot2[3] = rec2
-
-    #Color#
-    sc1.send("Ingrese un color que comience con " + lttr + '\n')
-    sc2.send("Ingrese un color que comience con " + lttr + '\n')
-
-    rec1 = cleanWord(sc1.recv(1024))
-    print(rec1)
-
-    rec2 = cleanWord(sc2.recv(1024))
-    print(rec2)
-
-    tot1[4] = rec1
-    tot2[4] = rec2
-
+    print("start")
     #Puntaje jugador 1
-    print(totalScore(tot1))
-    sc1.send(totalScore(tot1))
+    res1 = pickle.loads(sc1.recv(1024))
+    print(totalScore(res1))
+    tot1 = totalScore(res1)
+    #sc1.send(str(tot1))
 
     #Puntaje jugador 2
-    print(totalScore(tot2))
-    sc1.send(totalScore(tot2))
+    res2 = pickle.loads(sc2.recv(1024))
+    print(totalScore(res2))
+    tot2 = totalScore(res2)
 
+    if winner(tot1, tot2) == 1:
+        sc1.send("Has ganado. Obtuviste " + str(tot1) + " puntos.")
+        sc2.send("Has pedido. Obtuviste " + str(tot2) + " puntos.")
+    elif winner(tot1, tot2) == 2:
+        sc1.send("Has pedido. Obtuviste " + str(tot1) + " puntos.")
+        sc2.send("Has ganado. Obtuviste " + str(tot2) + " puntos.")
+    elif winner(tot1, tot2) == 0:
+        sc1.send("Empate. Obtuviste " + str(tot1) + " puntos.")
+        sc2.send("Empate. Obtuviste " + str(tot2) + " puntos.")
     break
