@@ -38,9 +38,6 @@ def winner(p1, p2):
     elif p1 == p2:
         return 0
 
-tot1 = ['','','','','']
-tot2 = ['','','','','']
-
 print 'Corriendo...'
 s = socket.socket()
 s.bind(('', 9999))
